@@ -1,0 +1,38 @@
+
+version: '3'
+
+services:
+  postgres:
+    image: postgres:13
+    environment:
+      - POSTGRES_USER=airflow_db
+      - POSTGRES_PASSWORD=airflow
+      - POSTGRES_DB=airflow
+      - PGDATA=/var/lib/postgresql/data
+    volumes:
+      - ./pgdata:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    restart: always
+
+  webserver:
+    build:
+      context: .
+      dockerfile: ./Dockerfile
+#    image: airflow:sist
+    depends_on:
+      - postgres
+    environment:
+      - LOAD_EX=n
+      - EXECUTOR=Local
+      - POSTGRES_USER=airflow_db
+      - POSTGRES_PASSWORD=airflow
+      - POSTGRES_DB=airflow
+    volumes:
+      - ./airflow:/airflow
+    ports:
+      - "8080:8080"
+      - "5555:5555"
+    command: webserver
+    restart: always
+    
