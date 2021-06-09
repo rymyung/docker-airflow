@@ -127,3 +127,10 @@ dmypy.json
 
 # Pyre type checker
 .pyre/
+
+# postgres file
+/pgdata
+
+# airflow log
+/airflow/logs
+/airflow/airflow.cfg
