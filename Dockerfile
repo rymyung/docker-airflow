@@ -19,15 +19,15 @@ RUN pip install --no-use-pep517 apache-airflow==2.1.0
 RUN pip install psycopg2
 RUN mkdir airflow
 
-COPY ./script/entrypoint.sh /entrypoint.sh
+#COPY ./script/entrypoint.sh /entrypoint.sh
 
 EXPOSE 8080 5555 8793
 
-WORKDIR ${AIRFLOW_USER_HOME}
-
 RUN useradd airflow_user
 RUN chown -R airflow_user ${AIRFLOW_USER_HOME}
-RUN chmod 777 /entrypoint.sh
+#RUN chmod +x /entrypoint.sh
 
-ENTRYPOINT ["/entrypoint.sh"]
-CMD ["webserver"]
+USER airflow_user
+WORKDIR ${AIRFLOW_USER_HOME}
+#ENTRYPOINT ["/entrypoint.sh"]
+#CMD ["webserver"]

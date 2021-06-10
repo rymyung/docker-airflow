@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/sh
 TRY_LOOP="20"
 
 # Global defaults and back-compat
@@ -32,8 +32,10 @@ wait_for_port() {
 
 # Other executors than SequentialExecutor drive the need for an SQL database, here PostgreSQL is used
 if [ "$AIRFLOW__CORE__EXECUTOR" != "SequentialExecutor" ]; then
+  echo "============ Not Sequential ============"
   # Check if the user has provided explicit Airflow configuration concerning the database
   if [ -z "$AIRFLOW__CORE__SQL_ALCHEMY_CONN" ]; then
+    echo "AIRFLOW__CORE__SQL_ALCHEMY_CONN is null"
     # Default values corresponding to the default compose files
     : "${POSTGRES_HOST:="postgres"}"
     : "${POSTGRES_PORT:="5432"}"
@@ -42,6 +44,7 @@ if [ "$AIRFLOW__CORE__EXECUTOR" != "SequentialExecutor" ]; then
     : "${POSTGRES_DB:="airflow"}"
     AIRFLOW__CORE__SQL_ALCHEMY_CONN="postgresql+psycopg2://${POSTGRES_USER}:${POSTGRES_PASSWORD}@${POSTGRES_HOST}:${POSTGRES_PORT}/${POSTGRESDB}"
     export AIRFLOW__CORE__SQL_ALCHEMY_CONN
+    echo $AIRFLOW__CORE__SQL_ALCHEMY_CONN
 
     # Check if the user has provided explicit Airflow configuration for the broker's connection to the database
     if [ "$AIRFLOW__CORE__EXECUTOR" = "CeleryExecutor" ]; then
@@ -59,7 +62,15 @@ if [ "$AIRFLOW__CORE__EXECUTOR" != "SequentialExecutor" ]; then
     POSTGRES_HOST=$(echo -n "$POSTGRES_ENDPOINT" | cut -d ':' -f1) # 
     POSTGRES_PORT=$(echo -n "$POSTGRES_ENDPOINT" | cut -d ':' -f2)
   fi
+  
+  echo $POSTGRES_HOST
+  echo $POSTGRES_PORT
+  echo $POSTGRES_DB
+  echo $POSTGRES_USER
+  echo $POSTGRES_PASSWORD
+  echo $POSTGRES_ENDPOINT
 
+  echo "Run wait_for_port"
   wait_for_port "Postgres" "$POSTGRES_HOST" "$POSTGRES_PORT"
 fi
 
@@ -89,4 +100,6 @@ case "$1" in
     # The command is something like bash, not an airflow subcommand. Just run it in the right environment.
     exec "$@"
     ;;
+
+echo "========== Done =========="
 esac

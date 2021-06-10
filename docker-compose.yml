@@ -5,9 +5,9 @@ services:
   postgres:
     image: postgres:13
     environment:
-      - POSTGRES_USER=airflow_db
-      - POSTGRES_PASSWORD=airflow
-      - POSTGRES_DB=airflow
+      - POSTGRES_USER=sist_admin
+      - POSTGRES_PASSWORD=admin
+      - POSTGRES_DB=airflow_si_dev
       - PGDATA=/var/lib/postgresql/data
     volumes:
       - ./pgdata:/var/lib/postgresql/data
@@ -23,16 +23,22 @@ services:
     depends_on:
       - postgres
     environment:
-      - LOAD_EX=n
-      - EXECUTOR=Local
-      - POSTGRES_USER=airflow_db
-      - POSTGRES_PASSWORD=airflow
-      - POSTGRES_DB=airflow
+      - POSTGRES_USER=sist_admin
+      - POSTGRES_PASSWORD=admin
+      - POSTGRES_DB=airflow_si_dev
+      - AIRFLOW__CORE__EXECUTOR=CeleryExecutor
+      - AIRFLOW__CORE__SQL_ALCHEMY_CONN=postgresql+psycopg2://sist_admin:admin@postgres/airflow_si_dev
+      #- AIRFLOW__CELERY__RESULT_BACKEND=db+postgresql://sist_admin:admin@postgres/airflow_si_dev
+      #- AIRFLOW__CELERY__BROKER_URL=redis://:@redis:6379/0
+      #- AIRFLOW__CORE__FERNET_KEY=''
+      #- AIRFLOW__CORE__DAGS_ARE_PAUSED_AT_CREATION='true'
+      - AIRFLOW__CORE__LOAD_EXAMPLES=False
+      #- AIRFLOW__API__AUTH_BACKEND='airflow.api.auth.backend.basic_auth'
     volumes:
       - ./airflow:/airflow
     ports:
       - "8080:8080"
       - "5555:5555"
-    command: webserver
+    #command: airflow db init
     restart: always
     
