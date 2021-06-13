@@ -1,4 +1,3 @@
-
 version: '3'
 
 services:
@@ -16,29 +15,22 @@ services:
     restart: always
 
   webserver:
-    build:
-      context: .
-      dockerfile: ./Dockerfile
-#    image: airflow:sist
+#    build:
+#      context: .
+#      dockerfile: ./Dockerfile
+    image: sist/airflow:2.1.0
     depends_on:
       - postgres
     environment:
+      - LOAD_EX=n
+      - EXECUTOR=Local
       - POSTGRES_USER=sist_admin
       - POSTGRES_PASSWORD=admin
       - POSTGRES_DB=airflow_si_dev
-      - AIRFLOW__CORE__EXECUTOR=CeleryExecutor
-      - AIRFLOW__CORE__SQL_ALCHEMY_CONN=postgresql+psycopg2://sist_admin:admin@postgres/airflow_si_dev
-      #- AIRFLOW__CELERY__RESULT_BACKEND=db+postgresql://sist_admin:admin@postgres/airflow_si_dev
-      #- AIRFLOW__CELERY__BROKER_URL=redis://:@redis:6379/0
-      #- AIRFLOW__CORE__FERNET_KEY=''
-      #- AIRFLOW__CORE__DAGS_ARE_PAUSED_AT_CREATION='true'
-      - AIRFLOW__CORE__LOAD_EXAMPLES=False
-      #- AIRFLOW__API__AUTH_BACKEND='airflow.api.auth.backend.basic_auth'
     volumes:
       - ./airflow:/airflow
     ports:
       - "8080:8080"
       - "5555:5555"
-    #command: airflow db init
+    command: webserver
     restart: always
-    
