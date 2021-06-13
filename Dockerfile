@@ -1,4 +1,3 @@
-
 FROM python:3.8-slim-buster
 
 ARG AIRFLOW_VERSION=2.1.0
@@ -29,5 +28,5 @@ RUN useradd airflow_user
 RUN chown -R airflow_user ${AIRFLOW_USER_HOME}
 RUN chmod 777 /entrypoint.sh
 
-ENTRYPOINT ["/entrypoint.sh"]
+ENTRYPOINT ["sh", "/entrypoint.sh"]
 CMD ["webserver"]
