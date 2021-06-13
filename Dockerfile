@@ -16,11 +16,14 @@ RUN pip install pendulum
 RUN pip install --no-use-pep517 pandas
 RUN pip install --no-use-pep517 apache-airflow==2.1.0
 RUN pip install psycopg2
+RUN pip install celery
+RUN pip install flower
+RUN pip install redis
 RUN mkdir airflow
 
 COPY ./script/entrypoint.sh /entrypoint.sh
 
-EXPOSE 8080 5555 8793
+EXPOSE 8080 5555
 
 WORKDIR ${AIRFLOW_USER_HOME}
 

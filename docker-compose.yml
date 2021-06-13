@@ -1,5 +1,31 @@
 version: '3'
 
+x-airflow-common:
+  &airflow-common
+  image: sist/airflow:2.1.0
+  environment:
+    &airflow-common-env
+    AIRFLOW__CORE__EXECUTOR: CeleryExecutor
+    AIRFLOW__CORE__SQL_ALCHEMY_CONN: postgresql+psycopg2://sist_admin:admin@postgres:5432/airflow_si_dev
+    AIRFLOW__CELERY__RESULT_BACKEND: db+postgresql://sist_admin:admin@postgres:5432/airflow_si_dev
+    AIRFLOW__CELERY__BROKER_URL: redis://redis:6379/0
+    AIRFLOW__CORE__LOAD_EXAMPLES: 'False'
+    _AIRFLOW_WWW_USER_USERNAME: sist_admin
+    _AIRFLOW_WWW_USER_PASSWORD: admin
+    AF_USER_NAME: sist_admin
+    AF_USER_PASSWORD: admin
+    AF_USER_FIRST_NAME: seller
+    AF_USER_LAST_NAME: insights
+    AF_USER_EMAIL: rymyung@hanmail.net
+    AF_USER_ROLE: Admin
+  volumes:
+    - ./airflow:/airflow
+  depends_on:
+    redis:
+      condition: service_healthy
+    postgres:
+      condition: service_healthy
+  
 services:
   postgres:
     image: postgres:13
@@ -11,26 +37,76 @@ services:
     volumes:
       - ./pgdata:/var/lib/postgresql/data
     ports:
-      - "5432:5432"
+      - 5432:5432
+    healthcheck:
+      test: ["CMD", "pg_isready", "-U", "sist_admin", "-d", "airflow_si_dev"]
+      interval: 5s
+      retries: 5
+    restart: always
+  
+  redis:
+    image: redis:latest
+    environment:
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+    ports:
+      - 6379:6379
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 30s
+      retries: 50
+    command: redis-server
     restart: always
 
   webserver:
-#    build:
-#      context: .
-#      dockerfile: ./Dockerfile
-    image: sist/airflow:2.1.0
-    depends_on:
-      - postgres
-    environment:
-      - LOAD_EX=n
-      - EXECUTOR=Local
-      - POSTGRES_USER=sist_admin
-      - POSTGRES_PASSWORD=admin
-      - POSTGRES_DB=airflow_si_dev
-    volumes:
-      - ./airflow:/airflow
-    ports:
-      - "8080:8080"
-      - "5555:5555"
+    <<: *airflow-common
     command: webserver
+    ports:
+      - 8080:8080
+    healthcheck:
+      test: ["CMD", "curl", "--fail", "http://localhost:8080/health"]
+      interval: 10s
+      timeout: 10s
+      retries: 5
+    restart: always
+  
+  scheduler:
+    <<: *airflow-common
+    command: scheduler
+    depends_on: 
+      - webserver
+    healthcheck:
+      test: ["CMD-SHELL", 'airflow jobs check --job-type SchedulerJob --hostname "$${HOSTNAME}"']
+      interval: 10s
+      timeout: 10s
+      retries: 5
+    restart: always
+
+  worker:
+    <<: *airflow-common
+    command: celery worker
+    depends_on: 
+      - webserver
+    healthcheck:
+      test:
+        - "CMD-SHELL"
+        - 'celery --app airflow.executors.celery_executor.app inspect ping -d "celery@$${HOSTNAME}"'
+      interval: 10s
+      timeout: 10s
+      retries: 5
+    restart: always
+
+  flower:
+    <<: *airflow-common
+    command: celery flower
+    depends_on: 
+      - webserver
+    ports:
+      - 5555:5555
+    healthcheck:
+      test: ["CMD", "curl", "--fail", "http://localhost:5555/"]
+      interval: 10s
+      timeout: 10s
+      retries: 5
     restart: always
