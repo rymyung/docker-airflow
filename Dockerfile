@@ -9,6 +9,7 @@ RUN apt-get -y install gcc
 RUN apt-get -y install g++
 RUN apt-get -y install vim
 RUN apt-get -y install procps
+RUN apt-get -y install netcat
 RUN apt-get -y install libpq-dev
 RUN pip install --upgrade pip setuptools wheel
 RUN pip install numpy
@@ -22,7 +23,7 @@ RUN pip install --no-use-pep517 apache-airflow==2.1.0
 RUN pip install psycopg2
 RUN mkdir airflow
 
-EXPOSE 8080 5555 8793
+COPY ./script/entrypoint.sh /entrypoint.sh
 
 WORKDIR ${AIRFLOW_USER_HOME}
 
@@ -32,4 +33,5 @@ RUN chmod 777 ${AIRFLOW_USER_HOME}
 
 USER airflow_user
 
-#ENTRYPOINT ["airflow", "version"]
+ENTRYPOINT ["bash", "/entrypoint.sh"]
+
