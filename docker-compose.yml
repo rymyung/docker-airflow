@@ -7,30 +7,31 @@ services:
       - POSTGRES_USER=sist_admin
       - POSTGRES_PASSWORD=admin
       - POSTGRES_DB=airflow_si_dev
-      - PGDATA=/var/lib/postgresql/data
     volumes:
       - ./pgdata:/var/lib/postgresql/data
     ports:
-      - "5432:5432"
+      - 5432:5432
+    user: postgres
+    restart: always
+
+  redis:
+    image: redis:latest
+    ports:
+      - 6379:6379
     restart: always
 
   webserver:
-#    build:
-#      context: .
-#      dockerfile: ./Dockerfile
     image: sist/airflow:2.1.0
     depends_on:
       - postgres
+      - redis
     environment:
-      - LOAD_EX=n
-      - EXECUTOR=Local
-      - POSTGRES_USER=sist_admin
-      - POSTGRES_PASSWORD=admin
-      - POSTGRES_DB=airflow_si_dev
+      - AIRFLOW__CORE__EXECUTOR=CeleryExecutor
+      - AIRFLOW__CORE__SQL_ALCHEMY_CONN=postgresql+psycopg2://sist_admin:admin@postgres/airflow_si_dev
     volumes:
       - ./airflow:/airflow
     ports:
-      - "8080:8080"
-      - "5555:5555"
+      - 8080:8080
+      - 5555:5555
     command: webserver
     restart: always
