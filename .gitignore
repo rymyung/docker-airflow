@@ -139,7 +139,6 @@ dmypy.json
 /airflow/airflow-worker.pid
 /airflowwebserver_config.py
 
-# postgres data
-/pgdata
-
+# docker setting
+/config/common.env
 /.idea
