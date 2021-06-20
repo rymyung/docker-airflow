@@ -16,7 +16,7 @@ dag = DAG(  'test_dag',
 
 t1 = BashOperator(
     task_id='test_task',
-    bash_command='date',
+    bash_command='sleep 120',
     dag=dag
 )
 
