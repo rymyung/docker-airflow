@@ -134,3 +134,12 @@ dmypy.json
 # airflow log
 /airflow/logs
 /airflow/airflow.cfg
+/airflow/airflow-scheduler.*
+/airflow/airflow-webserver.pid
+/airflow/airflow-worker.pid
+/airflowwebserver_config.py
+
+# postgres data
+/pgdata
+
+/.idea
