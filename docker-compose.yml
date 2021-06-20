@@ -3,10 +3,8 @@ version: '3'
 services:
   postgres:
     image: postgres:13
-    environment:
-      - POSTGRES_USER=sist_admin
-      - POSTGRES_PASSWORD=admin
-      - POSTGRES_DB=airflow_si_dev
+    env_file:
+      - config/common.env
     volumes:
       - ./pgdata:/var/lib/postgresql/data
     ports:
@@ -16,22 +14,80 @@ services:
 
   redis:
     image: redis:latest
+    env_file:
+      - config/common.env
     ports:
       - 6379:6379
     restart: always
 
-  webserver:
+  init:
     image: sist/airflow:2.1.0
+    env_file:
+      - config/common.env
     depends_on:
       - postgres
       - redis
     environment:
-      - AIRFLOW__CORE__EXECUTOR=CeleryExecutor
-      - AIRFLOW__CORE__SQL_ALCHEMY_CONN=postgresql+psycopg2://sist_admin:admin@postgres/airflow_si_dev
+      - _AIRFLOW_DB_INIT=true
+      - _AIRFLOW_USER_CREATE=true
+    volumes:
+      - ./airflow:/airflow
+    command: version
+    user: airflow_user
+
+
+  webserver:
+    image: sist/airflow:2.1.0
+    env_file:
+      - config/common.env
+    depends_on:
+      - init
     volumes:
       - ./airflow:/airflow
     ports:
       - 8080:8080
-      - 5555:5555
     command: webserver
     restart: always
+
+
+  scheduler:
+    image: sist/airflow:2.1.0
+    env_file:
+      - config/common.env
+    depends_on:
+      - init
+    volumes:
+      - ./airflow:/airflow
+    command: scheduler
+    restart: always
+
+
+  worker:
+    image: sist/airflow:2.1.0
+    env_file:
+      - config/common.env
+    environment:
+      - QUEUE_NAME=queue_1
+    depends_on:
+      - webserver
+    volumes:
+      - ./airflow:/airflow
+    ports:
+      - 8081:8080
+    command: celery worker
+    restart: always
+
+
+  flower:
+    image: sist/airflow:2.1.0
+    env_file:
+      - config/common.env
+    depends_on:
+      - webserver
+    volumes:
+      - ./airflow:/airflow
+    ports:
+      - 5555:5555
+    command: celery flower
+    restart: always
+
