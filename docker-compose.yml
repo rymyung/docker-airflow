@@ -32,8 +32,8 @@ services:
       - _AIRFLOW_USER_CREATE=true
     volumes:
       - ./airflow:/airflow
+    user: "200"
     command: version
-    user: airflow_user
 
 
   webserver:
@@ -47,6 +47,7 @@ services:
     ports:
       - 8080:8080
     command: webserver
+    user: "200"
     restart: always
 
 
@@ -59,6 +60,7 @@ services:
     volumes:
       - ./airflow:/airflow
     command: scheduler
+    user: "200"
     restart: always
 
 
@@ -75,6 +77,7 @@ services:
     ports:
       - 8081:8080
     command: celery worker
+    user: "200"
     restart: always
 
 
@@ -89,5 +92,6 @@ services:
     ports:
       - 5555:5555
     command: celery flower
+    user: "200"
     restart: always
 
