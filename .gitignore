@@ -137,7 +137,8 @@ dmypy.json
 /airflow/airflow-scheduler.*
 /airflow/airflow-webserver.pid
 /airflow/airflow-worker.pid
-/airflowwebserver_config.py
+/airflow/webserver_config.py
+/airflow.db
 
 # docker setting
 /config/common.env
